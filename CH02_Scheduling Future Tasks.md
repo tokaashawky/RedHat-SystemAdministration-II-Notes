@@ -1,29 +1,26 @@
 # 🕒 Chapter 2 — Scheduling Future Tasks
----
-
-This chapter explains how to schedule **one-time**, **recurring**, and **system-based** tasks in Linux using `at`, `cron`, `anacron`, and systemd timers.
+This chapter explains how to schedule **one-time**, **recurring**, and **system-based** tasks in Linux using `at`, `cron`, `anacron`, and `systemd timers`.
 
 ---
 
 ## ⚙️ 1. Scheduling One-Time Tasks with `at` Command
 The **`atd` service** (daemon) allows scheduling **one-time jobs** in Linux using the `at` command.
-
-### 🧩 Service Management
 ```bash
 systemctl status atd
 ```
 > ✅ Usually enabled and running by default.
 
----
 
-### 🧾 Basic Commands
+### Basic Commands
 | Command | Description |
 |----------|-------------|
 | `atq` or `at -l` | View pending jobs for the current user (job ID, execution time, queue, owner) |
 | `watch atq` or `watch at -l` | Continuously monitor pending jobs |
 | `atrm <jobID>` or `at -r <jobID>` | Remove a pending job |
 
+
 ---
+
 
 ### 🧠 Creating One-Time Tasks
 
@@ -38,39 +35,30 @@ atq                                    # Get jobID
 atrm <jobID>                           # Remove job
 ```
 
----
-
 #### 2️⃣ Without Entering the Prompt (Using a Pipeline)
 ```bash
 echo "date >> /tmp/todayDate.txt" | at now
 ```
 > Runs immediately without opening the `at` prompt.
 
----
-
 #### 3️⃣ Scheduling a Script
 ```bash
 at now < /tmp/script.sh
 ```
 > Make sure `/tmp/script.sh` exists before running the command.
-> 
+
 ---
 
 ### 📂 Job Storage & Access Control
 
-#### 🔍 Stored Jobs
+#### 📘 Stored Jobs
 - A scheduled job = one small script file that stores both your environment setup and the commands you told at to run later.
-- All scheduled jobs are saved as scripts in:
+- All scheduled jobs are saved as scripts in `/var/spool/at`.
+```bash
+cd /var/spool/at        # Navigate to job directory 
+atq                     # List pending jobs 
+at -c <jobID>           # View job content 
 ```
-/var/spool/at
-```
-
-| Command | Description |
-|----------|-------------|
-| `cd /var/spool/at` | Navigate to job directory |
-| `atq` | List pending jobs |
-| `at -c <jobID>` | View job content |
-
 ---
 
 #### 🔐 Access Control
@@ -79,7 +67,6 @@ at now < /tmp/script.sh
 | `/etc/at.allow` | If it exists → only listed users can use `at`. |
 | `/etc/at.deny` | Used if `/etc/at.allow` doesn’t exist → listed users **cannot** use `at`. |
 | Neither exists | Only **root** can use `at`. |
-> 🧠 **Notes:**
 > - If `/etc/at.allow` exists but is **empty**, no one (except root) can use `at`.  
 > - If `/etc/at.deny` exists but is **empty**, all users (except explicitly restricted ones) can use `at`.
 
@@ -87,13 +74,9 @@ at now < /tmp/script.sh
 
 ## ⏰ 2. Scheduling Repeated Tasks with `cron`
 The **`crond` service** schedules **recurring jobs** using `crontab`.
-
-### 🧩 Service Management
 ```bash
 systemctl status crond
 ```
-
----
 
 ### 🧾 Basic Commands
 | Command | Description |
@@ -128,7 +111,7 @@ crontab mycronfile
 
 ### 📂 Cron File Locations 
 
-#### 🗂️ **/var/spool/cron/**
+#### **/var/spool/cron/**
 - **Purpose:** Stores each user’s personal crontab file created using `crontab -e`.
 - **Format:**
   ```
@@ -198,7 +181,6 @@ crontab mycronfile
   7              25         cron.weekly   nice run-parts /etc/cron.weekly
   @monthly       45         cron.monthly  nice run-parts /etc/cron.monthly
   ```
-> 🧠 **Note:**  
 > `nice run-parts` runs all executable scripts inside the specified directory in order.  
 > This ensures all daily, weekly, and monthly maintenance tasks execute automatically after boot.
 
@@ -210,15 +192,11 @@ crontab mycronfile
   - Log rotation updates  
   - Cache cleanup tasks
 
----
-
 #### 🗂️ **/etc/cron.daily/**
 - Contains scripts that run **once per day**.  
 - Example use cases:
   - Updating the `mlocate` database  
   - Removing temporary files
-
----
 
 #### 🗂️ **/etc/cron.weekly/**
 - Contains scripts that run **once per week**.  
@@ -226,8 +204,6 @@ crontab mycronfile
   - System maintenance  
   - Cleaning unused files  
   - Generating weekly reports
-
----
 
 #### 🗂️ **/etc/cron.monthly/**
 - Contains scripts that run **once per month**.  
@@ -270,10 +246,6 @@ Check active timers:
 ```bash
 systemctl list-units --type=timer
 ```
-
----
-
-### 🧩 Examples
 | Timer | Description |
 |--------|-------------|
 | `logrotate.timer` | Daily log rotation |
@@ -282,17 +254,13 @@ systemctl list-units --type=timer
 ---
 
 ### ⚙️ Managing Temporary Files with `systemd-tmpfiles`
-
 Systemd uses **tmpfiles** and timer units to manage temporary files and directories automatically.  
 These components ensure system directories like `/tmp`, `/var/tmp`, and `/run` remain clean and correctly initialized.
-
 
 | Command | Description |
 |----------|-------------|
 | `systemd-tmpfiles --create` | Apply tmpfiles rules manually |
 | `systemd-tmpfiles --clean` | Clean up expired files |
-
----
 
 #### 🗂️ Configuration File Locations
 | Path | Purpose | Priority |
@@ -323,9 +291,9 @@ These components ensure system directories like `/tmp`, `/var/tmp`, and `/run` r
     `OnBootSec=15min` → start 15 min after boot  
     `OnUnitActiveSec=1d` → run daily
 
-🧩 **Explanation:**
-- The first cleanup occurs **15 minutes after boot** (to avoid slowing down startup).  
-- Then it repeats **once every 24 hours**.  
+> **Explanation:**
+> - The first cleanup occurs **15 minutes after boot** (to avoid slowing down startup).  
+> - Then it repeats **once every 24 hours**.  
 ```
 Boot system → 15 minutes later → cleanup runs once
 Then → repeats every 24 hours
@@ -351,21 +319,6 @@ q /var/tmp 1777 root root 30d
 - `q` → clean directory  
 - `1777` → permissions (sticky world-writable)  
 - `10d / 30d` → delete files older than these ages
-
----
-
-### 🧩 Customizing Timer Settings
-To modify timer intervals:
-```bash
-cp /usr/lib/systemd/system/systemd-tmpfiles-clean.timer /etc/systemd/system/
-vim /etc/systemd/system/systemd-tmpfiles-clean.timer
-systemctl daemon-reload
-```
-Systemd prefers the copy in `/etc/systemd/system/`.
-Check Updates:
-```bash
-systemctl cat systemd-tmpfiles-clean.timer
-```
 
 ---
 
@@ -427,7 +380,7 @@ Timer unit file is located at: /usr/lib/systemd/system/sysstat-collect.timer
 
 Change interval:
 ```bash
-cp /usr/lib/systemd/system/sysstat-collect.timer /etc/systemd/system/
+cp /usr/lib/systemd/system/sysstat-collect.timer /etc/systemd/system/sysstat-collect.timer
 vim /etc/systemd/system/sysstat-collect.timer   # Change *:00/10 → *:00/01
 systemctl daemon-reload
 ```
@@ -436,7 +389,6 @@ View collected data:
 ```bash
 sar -r
 ```
-
 ---
 
 ## ✅ Summary
@@ -447,3 +399,4 @@ sar -r
 | `cron` | Repeated job scheduling | Hourly, daily, weekly jobs |
 | `anacron` | Run missed cron jobs after reboot | For non-24/7 systems |
 | `systemd timers` | Modern system-level scheduling | Replaces cron/anacron with better integration |
+
