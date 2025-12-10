@@ -13,6 +13,7 @@ Each chapter includes clear explanations, commands, and examples to make revisio
 | 01 | Managing Users and Groups | Managing local users, groups, and permissions |
 | 02 | [Scheduling Future Tasks](CH02_Scheduling%20Future%20Tasks.md) | Using `at`, `cron`, and `systemd timers` to schedule jobs |
 | 03 | [Tuning System Performance](CH03_Tuning%20System%20Performance.md) | Optimizing Linux systems using `tuned`, `profiles`, `dynamic tuning`, and `Cockpit` management |
+| 04 | [Access Control Lists (ACLs)](CH04_Controlling%20Access%20to%20Files%20with%20ACLs.md) | Understanding fine-grained permissions using ACLs |
 
 ## ⚙️ About This Repo
 -   These notes are written in Markdown format for clarity and easy sharing.  
